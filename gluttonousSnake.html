@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+<script>
+window.onload=function(){
+
+	var food = [];
+	var snake = {
+		'head' : [0,0],
+		'spead': [100,100],
+		'speadCombine': 20000,
+		'body' : [[0,0],[0,0],[0,0]]
+	};
+
+	var createFood = function(){
+
+		var newfood=[];
+
+		for (var i=0; i<30; i++)
+		{
+			var oneFood = [i,0,0];
+			oneFood[1]=parseInt(800*Math.random());
+			oneFood[2]=parseInt(500*Math.random());
+			newfood.push(oneFood);
+		}
+		return newfood;
+	}
+
+	food = createFood();
+
+	setInterval(function(){
+		food = createFood();
+	},10000);
+
+	var oSn = document.querySelector('#snake');
+	var oGsn = oSn.getContext('2d');
+
+	var showFood = function(arr){
+		for (var i=0; i<food.length; i++)
+		{
+			oGsn.beginPath();
+			oGsn.arc(arr[i][1],arr[i][2],5,0,2*Math.PI);
+			oGsn.fill();
+			oGsn.closePath();
+		}	
+	}
+
+	showFood(food);
+
+	var runSnake = function(json){
+
+			setInterval(function(){
+
+				for(var i=0; i<food.length; i++)
+				{
+					if (10>=Math.floor(Math.sqrt((snake.head[0]-food[i][1])*(snake.head[0]-food[i][1])+(snake.head[1]-food[i][2])*(snake.head[1]-food[i][2]))))
+					{
+						food.splice(i,1);
+						snake.body.push([json.head[0],json.head[1]]);
+					}
+				}
+
+				var speadX = json.spead[0]/100;
+				var speadY = json.spead[1]/100;
+
+				json.body[0][0] = json.head[0]-speadX*4;
+				json.body[0][1] = json.head[1]-speadY*4;
+				for(var i=1; i<json.body.length;i++)
+				{
+
+					json.body[i][0] = json.body[i-1][0]-speadX*4;
+					json.body[i][1] = json.body[i-1][1]-speadY*4;
+				}
+				json.head[0] = json.head[0]+speadX;
+				json.head[1] = json.head[1]+speadY;
+				oGsn.clearRect(0,0,800,500);
+				showFood(food);
+				oGsn.beginPath();
+				oGsn.arc(json.head[0],json.head[1],5,0,2*Math.PI);
+				oGsn.fill();
+				oGsn.closePath();
+				for(var i=0; i<json.body.length;i++)
+				{
+					oGsn.beginPath();
+					oGsn.arc(json.body[i][0],json.body[i][1],5,0,2*Math.PI);
+					oGsn.fill();
+					oGsn.closePath();
+				}			
+			},30)
+	}
+
+	document.onkeydown = function keyDown(ev){
+		var ev = window.ev || ev;
+		var keyCode = ev.which;
+
+		var speadX = snake.spead[0];
+		var speadY = snake.spead[1];
+
+		switch (keyCode)
+		{
+			case 37:
+				speadX=-100;
+				break;
+			case 38:
+				speadY=-100;
+				break;
+			case 39:
+				speadX=100;
+				break;
+			case 40:
+				speadY=100;
+				break;
+			default:
+				break;
+		}
+
+
+		snake.spead[0] = speadX;
+		snake.spead[1] = speadY;
+
+	}
+
+	runSnake(snake);
+
+	
+}
+</script>
+</head>
+<body style="background:black;">
+	<canvas id='snake' width='800' height='500' style="background:white;"></canvas>
+</body>
+</html>
