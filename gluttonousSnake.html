@@ -1,8 +1,36 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	<title>Document</title>
+<style>
+	canvas {
+		border: 2px solid black;
+	}
+	input[type=button]{
+		position: absolute;
+		top: 6px;
+		left: 814px;
+		font-size: 16px;
+	}
+	input[value="Stop!"]{
+		left:940px;
+		display: none;
+	}
+	div{
+		position: absolute;
+		top: 40px;
+		left: 816px;
+	}
+	div span{
+		background: #C0D9D9;
+		display: block;
+		text-align: center;
+		margin:16px auto;
+		display: none;
+	}
+</style>
+
 <script>
 window.onload=function(){
 
@@ -13,12 +41,18 @@ window.onload=function(){
 		'speadCombine': 20000,
 		'body' : [[0,0],[0,0],[0,0]]
 	};
+	var oSn = document.querySelector('#snake');
+	var oGsn = oSn.getContext('2d');
+	var aInp = document.querySelectorAll('input');
+	var aSpan = document.getElementsByTagName('span');
+	var foodTimer=null;
+	var cm = 0;
 
 	var createFood = function(){
 
 		var newfood=[];
 
-		for (var i=0; i<30; i++)
+		for (var i=0; i<40; i++)
 		{
 			var oneFood = [i,0,0];
 			oneFood[1]=parseInt(800*Math.random());
@@ -27,63 +61,100 @@ window.onload=function(){
 		}
 		return newfood;
 	}
+	food=createFood();
+	snake.head[0]=parseInt(800*Math.random());
+	snake.head[1]=parseInt(500*Math.random());
 
-	food = createFood();
+	aInp[0].onclick=function(){
 
-	setInterval(function(){
-		food = createFood();
-	},10000);
-
-	var oSn = document.querySelector('#snake');
-	var oGsn = oSn.getContext('2d');
+		if(cm)
+		{
+			snake = {
+			'head' : [0,0],
+			'spead': [100,100],
+			'speadCombine': 20000,
+			'body' : [[0,0],[0,0],[0,0]]
+			};
+			snake.head[0]=parseInt(800*Math.random());
+			snake.head[1]=parseInt(500*Math.random());
+			food = createFood();
+			showFood(food);
+			cm=0;
+		} else {
+			foodTimer=setInterval(function(){
+			food = createFood();
+			},12000);
+		}
+		showFood(food);
+		runSnake(snake);
+		
+		for (var i=0; i<aSpan.length; i++)
+		{
+			aSpan[i].style.display = 'block';
+		}
+		aInp[1].style.display='block';
+	}
+	aInp[1].onclick = function(){
+		clearInterval(snake.timer);
+		clearInterval(foodTimer);
+	}
 
 	var showFood = function(arr){
 		for (var i=0; i<food.length; i++)
 		{
 			oGsn.beginPath();
+			oGsn.fillStyle='green';
 			oGsn.arc(arr[i][1],arr[i][2],5,0,2*Math.PI);
 			oGsn.fill();
 			oGsn.closePath();
 		}	
 	}
 
-	showFood(food);
-
 	var runSnake = function(json){
 
-			setInterval(function(){
+			json.timer = setInterval(function(){
+				aSpan[2].innerHTML = json.body.length +1;
+				if(json.head[0]<0 || json.head[0]>800 || json.head[1]<0 || json.head[1]>500)
+				{
+					clearInterval(json.timer);
+					cm = confirm("GAME OVER");
+				}
 
 				for(var i=0; i<food.length; i++)
 				{
-					if (10>=Math.floor(Math.sqrt((snake.head[0]-food[i][1])*(snake.head[0]-food[i][1])+(snake.head[1]-food[i][2])*(snake.head[1]-food[i][2]))))
+					if (10>=Math.floor(Math.sqrt((json.head[0]-food[i][1])*(json.head[0]-food[i][1])+(json.head[1]-food[i][2])*(json.head[1]-food[i][2]))))
 					{
 						food.splice(i,1);
-						snake.body.push([json.head[0],json.head[1]]);
+						json.body.push([json.head[0],json.head[1]]);
 					}
 				}
 
 				var speadX = json.spead[0]/100;
 				var speadY = json.spead[1]/100;
-
+				json.head[0] = json.head[0]+speadX;
+				json.head[1] = json.head[1]+speadY;
 				json.body[0][0] = json.head[0]-speadX*4;
 				json.body[0][1] = json.head[1]-speadY*4;
+
 				for(var i=1; i<json.body.length;i++)
 				{
 
 					json.body[i][0] = json.body[i-1][0]-speadX*4;
 					json.body[i][1] = json.body[i-1][1]-speadY*4;
 				}
-				json.head[0] = json.head[0]+speadX;
-				json.head[1] = json.head[1]+speadY;
+
 				oGsn.clearRect(0,0,800,500);
 				showFood(food);
+				
+				oGsn.fillStyle="red";
 				oGsn.beginPath();
 				oGsn.arc(json.head[0],json.head[1],5,0,2*Math.PI);
 				oGsn.fill();
-				oGsn.closePath();
+				oGsn.closePath;
 				for(var i=0; i<json.body.length;i++)
 				{
 					oGsn.beginPath();
+					oGsn.fillStyle="black";
 					oGsn.arc(json.body[i][0],json.body[i][1],5,0,2*Math.PI);
 					oGsn.fill();
 					oGsn.closePath();
@@ -91,7 +162,7 @@ window.onload=function(){
 			},30)
 	}
 
-	document.onkeydown = function keyDown(ev){
+	document.onkeydown = function snakeMove(ev){
 		var ev = window.ev || ev;
 		var keyCode = ev.which;
 
@@ -101,34 +172,44 @@ window.onload=function(){
 		switch (keyCode)
 		{
 			case 37:
-				speadX=-100;
+				speadX-=10;
+				speadY = Math.floor(Math.sqrt(snake.speadCombine-(speadX*speadX)));
 				break;
 			case 38:
-				speadY=-100;
+				speadY-=10;
+				speadX = Math.floor(Math.sqrt(snake.speadCombine-(speadY*speadY)));
 				break;
 			case 39:
-				speadX=100;
+				speadX+=10;
+				speadY = Math.floor(Math.sqrt(snake.speadCombine-(speadX*speadX)));
 				break;
 			case 40:
-				speadY=100;
+				speadY+=10;
+				speadX = Math.floor(Math.sqrt(snake.speadCombine-(speadY*speadY)));
 				break;
 			default:
 				break;
 		}
-
-
 		snake.spead[0] = speadX;
 		snake.spead[1] = speadY;
-
-	}
-
-	runSnake(snake);
-
-	
+	}	
 }
 </script>
 </head>
-<body style="background:black;">
+<body>
 	<canvas id='snake' width='800' height='500' style="background:white;"></canvas>
+	<input type="button" value="Start Game!">
+	<input type="button" value="Stop!">
+	<div>
+		<span>
+			Try</br>Up / Right / Down / Left</br>To control
+		</span>
+		<span>
+			Length:
+		</span>
+		<span id='score'>
+			
+		</span>
+	</div>
 </body>
 </html>
