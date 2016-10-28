@@ -1,5 +1,7 @@
 # gluttonousSnake
 
-# version:1.0, awkward move wait to solve. 
+# version:2.0 
 
-# 
+# move problem solve
+
+# the problem of control of direction wait to solve
